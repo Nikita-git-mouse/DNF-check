@@ -1,40 +1,50 @@
 function isDNF(expression) {
+    // Разбиваем выражение на конъюнкции Ai
     const subExpressions = expression.split(' OR ');
+
+    // Объект для хранения количества вхождений каждой переменной в конъюнкции
     const variables = {};
-    const negatedVariables = new Set();
+
+    // Проходимся по каждой конъюнкции
     for (let i = 0; i < subExpressions.length; i++) {
         const subExpression = subExpressions[i];
-        const subVariables = new Set();
-        const subNegatedVariables = new Set();
-        const terms = subExpression.split(' AND ');
-        if (!containsNegationAndValue(terms)){
-            return false
+
+        // Разбиваем конъюнкцию на литералы
+        const literals = subExpression.split(' AND ');
+
+        // Проверяем, что каждый терм является конъюнкцией литералов
+        if (literals.length < 2) {
+            return false;
         }
-        for (let j = 0; j < terms.length; j++) {
-            const term = terms[j].trim();
-            if (!isValidVariable(term)) {
-                // Если терм не соответствует шаблону "A" или "NOT A"
+
+        // Проходимся по каждому литералу
+        for (let j = 0; j < literals.length; j++) {
+            const literal = literals[j];
+
+            // Проверяем, что литерал соответствует шаблону "A" или "NOT A"
+            if (!isValidVariable(literal)) {
                 return false;
             }
-            const negated = term.startsWith('NOT ');
-            const variable = term;
-            if (variables[variable] > 0) {
-                // Проверяем, что каждая переменная входит только в одну конъюнкцию Ai
-                return false;
-            }
+
+            // Определяем, является ли литерал отрицанием переменной
+            const negated = literal.startsWith('NOT ');
+
+            // Получаем имя переменной
+            const variable = negated ? literal.substr(4) : literal;
+
+            // Увеличиваем количество вхождений переменной в объекте variables
             variables[variable] = (variables[variable] || 0) + 1;
-            if (negated) {
-                negatedVariables.add(variable);
-                subNegatedVariables.add(variable);
-            } else {
-                subVariables.add(variable);
-            }
         }
-        // Проверяем, что каждая конъюнкция Ai включает каждую переменную или ее отрицание, причем каждая переменная может быть включена только один раз
-        if (subVariables.size + subNegatedVariables.size > Object.keys(variables).length) {
+    }
+
+    // Проверяем, что каждая переменная входит только в одну конъюнкцию
+    for (const variable in variables) {
+        if (variables[variable] > 1) {
             return false;
         }
     }
+
+    // Если все проверки прошли успешно, то выражение является ДНФ
     return true;
 }
 
@@ -92,11 +102,17 @@ function containsNegationAndValue(arr) {
 // const arr2 = ['A', 'B', 'C', 'NOT D'];
 // console.log(containsNegationAndValue(arr1)); // false
 // console.log(containsNegationAndValue(arr2)); // true
-
-const expression2 = 'A AND NOT A OR B AND C'; // не является ДНФ
-console.log(isDNF(expression2))
-
-
-
-const expression1 = 'A AND B OR NOT C AND D'; // не является ДНФ
-//console.log(isDNF(expression1))
+//
+// const expression2 = 'A AND NOT A OR B AND C'; // не является ДНФ
+// console.log(isDNF(expression2))
+//
+//
+//
+// console.log(isDNF('(A AND B) OR C')); // false
+// console.log(isDNF('A AND B OR C OR D AND E')); // true
+// console.log(isDNF('NOT A AND NOT B AND NOT C')); // true
+// console.log(isDNF('A AND B AND C AND D OR E AND F AND G AND H OR I AND J AND K AND L')); // true
+// console.log(isDNF('A OR NOT A AND C')); // false
+// console.log(isDNF('A AND NOT A OR B')); // false
+// console.log(isDNF('NOT A OR B OR C')); // false
+console.log(isDNF('(A OR B) AND (C OR D) AND (E OR F OR NOT G)'))
