@@ -7,6 +7,9 @@ function isDNF(expression) {
         const subVariables = new Set();
         const subNegatedVariables = new Set();
         const terms = subExpression.split(' AND ');
+        if (!containsNegationAndValue(terms)){
+            return false
+        }
         for (let j = 0; j < terms.length; j++) {
             const term = terms[j].trim();
             if (!isValidVariable(term)) {
@@ -14,7 +17,7 @@ function isDNF(expression) {
                 return false;
             }
             const negated = term.startsWith('NOT ');
-            const variable = negated ? term.slice(4) : term;
+            const variable = term;
             if (variables[variable] > 0) {
                 // Проверяем, что каждая переменная входит только в одну конъюнкцию Ai
                 return false;
@@ -37,6 +40,7 @@ function isDNF(expression) {
 
 
 function isValidVariable(variable) {
+    if (variable.length === 1) {
         // Проверяем, что переменная не пуста
         if (variable.length === 0) {
             return false;
@@ -53,7 +57,7 @@ function isValidVariable(variable) {
                 return false;
             }
         }
-    
+    }
 
     return true;
 }
@@ -66,7 +70,30 @@ function isLetterOrDigit(character) {
     return isLetter(character) || (character >= '0' && character <= '9');
 }
 
-const expression2 = 'NOT A AND B OR A AND D'; // не является ДНФ
+function containsNegationAndValue(arr) {
+    const values = new Set();
+    for (let i = 0; i < arr.length; i++) {
+        const value = arr[i];
+        if (value.startsWith('NOT ')) {
+            if (values.has(value.slice(4))) {
+                return false;
+            }
+        } else {
+            if (values.has('NOT ' + value)) {
+                return false;
+            }
+        }
+        values.add(value);
+    }
+    return true;
+}
+//
+// const arr1 = ['A', 'NOT A'];
+// const arr2 = ['A', 'B', 'C', 'NOT D'];
+// console.log(containsNegationAndValue(arr1)); // false
+// console.log(containsNegationAndValue(arr2)); // true
+
+const expression2 = 'A AND NOT A OR B AND C'; // не является ДНФ
 console.log(isDNF(expression2))
 
 
